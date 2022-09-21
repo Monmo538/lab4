@@ -1,0 +1,11 @@
+Package: lab4
+Title: The model to handle linear regression in R
+Version: 0.0.0.9000
+Authors@R: 
+    person("Mona", "Moslemzadeh", , "monmo538@student.liu.se", role = c("aut", "cre"))
+    person("Adeel", "Ahmad", , "adeah090@student.liu.se", role = c("aut", "cre"))
+Description: The package uses object oriented model to handle handle special functions.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
