@@ -1,3 +1,24 @@
+#' @Title A Reference Class to represent a linear model.
+#'
+#' @field formula Presents description of model to be fitted. 
+#' @field data Shows observations including dependent (Y) and independent variables (X).
+#' @field coefficients The estimates for the model parameters to describe the relationship between X and Y.
+#' @field fittedvalues The predicted value of Y. 
+#' @field residuals The difference between observed value of the Y and the value of Y variable predicted from the regression line.
+#' @field df Difference between number of observations and parameters.
+#' @field residualvariance The variance of the values that are calculated by finding the distance between regression line and the actual points. 
+#' @field var_regcoef_matrix The variance of the parameters that are calculated as coefficients. 
+#' @field t_values A matrix with the t-values of coefficient. 
+#' @field p_value The probability of finding the given t-statistic if the null hypothesis of no relationship between X and Y were true. 
+#'
+#' @return An object of class " linreg "
+#' @export linreg
+#' @exportClass linreg
+#' @importFrom Methods new setRefClass
+#' @import ggplot2
+#' 
+#'
+#' @examples
 linreg <- setRefClass("linreg",
                       fields = list(
                         formula = "character",
@@ -38,8 +59,11 @@ linreg$methods(initialize = function(formula, data){
 show = function(){
   cat("call:\n")
   cat("linreg(formula =", formula, ", data = ", data, ")\n\n")
-  cat(rownames(coefficients), "\n")
-  cat(as.vector(coefficients), "\n")
+  v_coef <-as.vector(coefficients)
+  names(v_coef) <- rownames(coefficients)
+  cat("coefficients:", "\n")
+  print(v_coef)
+  cat("\n")
 },
 resid = function(){
   return(as.vector(residuals))
@@ -57,20 +81,28 @@ plot = function(){
     ggplot2::geom_point(shape = 1, size = 3) + 
     ggplot2::stat_summary(fun = "median", color = "red", geom = "line") + 
     ggplot2::labs(title = "Residuals vs Fitted")
-  plot1
+  
   standardized_residuals <- abs(residuals / sqrt(residualvariance))
   plot2 <- ggplot2::ggplot(mapping = ggplot2::aes(x = fittedvalues, y = sqrt(standardized_residuals))) +
     ggplot2::geom_point(shape = 1, size = 3) + 
     ggplot2::stat_summary(fun = "mean", color = "red", geom = "line") + 
     ggplot2::labs(title = "Sqrt Standardized residuals vs Fitted")
-  plot2
+  
+  plots <- list(plot1, plot2)
+  plots
+},
+summary = function(){
+  cat("call:\n")
+  cat("linreg(formula =", formula, ", data = ", data, ")\n\n")
 }
 )
 
 data("iris")
 test <- linreg(Petal.Length~Species, iris)
-# print(test)
+print(test)
 # test$resid()
 # test$pred()
 # test$coef()
-test$plot()  
+# test$plot()
+# x <- lm(Petal.Length~Species, iris)
+# summary(x)
