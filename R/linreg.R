@@ -88,8 +88,6 @@ linreg$methods(
   },
   summary = function(){
     cat(paste("(Intercept)", as.vector(coefficients)[1], sep = "\t"), "\n")
-    cat(paste("(Intercept)", as.vector(coefficients)[1], sep = "\t"), "\n")
-    se <- sqrt(abs(.self$residualvariance)) / sqrt(nrow(.self$data))
 
   }
 )

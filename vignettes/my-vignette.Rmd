@@ -1,8 +1,8 @@
 ---
-title: "my-vignette"
+title: "A linear regression package in R"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{A linear regression package in R}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -14,6 +14,59 @@ knitr::opts_chunk$set(
 )
 ```
 
+
+
+## About the Package
+This package has implemented a class based solution for linear regression. It uses a ordinary linear algebra and calculate:
+
+* Regressions coefficients
+* The fitted values
+* The residuals
+* The degrees of freedom
+* The residual variance
+* The variance of the regression coefficients
+* The t-values for each coefficient
+
+### Setup of Package 
 ```{r setup}
 library(lab4)
+linreg_mod <- linreg$new(Petal.Length ~ Species, data=iris)
+```
+
+### Print function
+Function to print the formula and intercept for the linear regression model
+```{r}
+linreg_mod$print()
+```
+
+### resid function 
+Function to calculate the resID
+```{r}
+linreg_mod$resid()
+```
+### resid function 
+Function to calculate the resID
+```{r}
+linreg_mod$resid()
+```
+### pred function 
+Function to show pred
+```{r}
+linreg_mod$pred()
+```
+
+### coef function 
+Function to calculate the coef
+```{r}
+linreg_mod$coef()
+```
+### plot function 
+Function to show the plot
+```{r}
+linreg_mod$resid()
+```
+### summary function 
+Function to show the summary
+```{r}
+linreg_mod$summary()
 ```
