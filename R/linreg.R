@@ -12,7 +12,7 @@ linreg <- setRefClass("linreg",
                         p_value = "matrix"
                       ))
 linreg$methods(initialize = function(formula, data){
-  .self$formula <- deparse(formula) # converts formula to character
+  .self$formula <- deparse(formula) # converts formula to character 
   .self$data <- deparse(substitute(data)) # deparse gives the names of the data set
   X <- model.matrix(formula, data)
   y <- all.vars(formula)[1]
@@ -24,7 +24,7 @@ linreg$methods(initialize = function(formula, data){
   .self$fittedvalues <- X %*% coefficients
   .self$residuals <- Y - fittedvalues
   .self$df <- n - p
-  .self$residualvariance <- as.numeric((t(residuals) %*% residuals) / df)
+  .self$residualvariance <- as.numeric((t(residuals) %*% residuals) / df) #as.numeric
   
   variance_matrix <- residualvariance * solve(t(X) %*% X)
   
@@ -52,15 +52,25 @@ coef = function(){
   names(coef) <- rownames(coefficients)
   return(coef)
 },
-summary = function(){
-  
+plot = function(){
+  plot1 <- ggplot2::ggplot(mapping = ggplot2::aes(x = fittedvalues, y = residuals)) +
+    ggplot2::geom_point(shape = 1, size = 3) + 
+    ggplot2::stat_summary(fun = "median", color = "red", geom = "line") + 
+    ggplot2::labs(title = "Residuals vs Fitted")
+  plot1
+  standardized_residuals <- abs(residuals / sqrt(residualvariance))
+  plot2 <- ggplot2::ggplot(mapping = ggplot2::aes(x = fittedvalues, y = sqrt(standardized_residuals))) +
+    ggplot2::geom_point(shape = 1, size = 3) + 
+    ggplot2::stat_summary(fun = "mean", color = "red", geom = "line") + 
+    ggplot2::labs(title = "Sqrt Standardized residuals vs Fitted")
+  plot2
 }
 )
 
 data("iris")
 test <- linreg(Petal.Length~Species, iris)
-print(test)
-test$resid()
-test$pred()
-test$coef()
-  
+# print(test)
+# test$resid()
+# test$pred()
+# test$coef()
+test$plot()  
