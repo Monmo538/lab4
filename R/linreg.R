@@ -1,4 +1,4 @@
-#' @Title A Reference Class to represent a linear model.
+#' @title A Reference Class to represent a linear model.
 #'
 #' @field formula Presents description of model to be fitted. 
 #' @field data Shows observations including dependent (Y) and independent variables (X).
@@ -14,11 +14,8 @@
 #' @return An object of class " linreg "
 #' @export linreg
 #' @exportClass linreg
-#' @importFrom Methods new setRefClass
 #' @import ggplot2
-#' 
-#'
-#' @examples
+
 linreg <- setRefClass("linreg",
                       fields = list(
                         formula = "character",
@@ -96,13 +93,3 @@ summary = function(){
   cat("linreg(formula =", formula, ", data = ", data, ")\n\n")
 }
 )
-
-data("iris")
-test <- linreg(Petal.Length~Species, iris)
-print(test)
-# test$resid()
-# test$pred()
-# test$coef()
-# test$plot()
-# x <- lm(Petal.Length~Species, iris)
-# summary(x)
