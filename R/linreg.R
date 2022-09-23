@@ -36,8 +36,8 @@ linreg$methods(
     X <- model.matrix(formula, data)
     y <- all.vars(formula)[1]
     Y <- data[,y]
-    n <- nrow(data)
-    p <- ncol(data)
+    n <- nrow(model.matrix(formula,data))
+    p <- ncol(model.matrix(formula,data))
 
     .self$coefficients <- solve(t(X) %*% X) %*% t(X) %*% Y
     .self$fittedvalues <- X %*% coefficients
@@ -52,7 +52,7 @@ linreg$methods(
     rownames(var_regcoef_matrix) <<- rownames(variance_matrix)
 
     .self$t_values <- coefficients / sqrt(var_regcoef_matrix)
-    .self$p_value <- pt(coefficients, df)
+    .self$p_value <<- 2 * pt(abs(.self$t_values), df, lower.tail = FALSE)
   },
   print = function(){
     cat(paste("linreg(formula = ", format(.self$formula), ", data = ", .self$data , ")\n\n ", sep = ""))
@@ -87,16 +87,43 @@ linreg$methods(
     plots
   },
   summary = function(){
-    cat(paste("(Intercept)", as.vector(coefficients)[1], sep = "\t"), "\n")
+    cat(paste("linreg(formula = ", format(.self$formula), ", data = ", .self$data , ")\n\n ", sep = ""))
+
+    resMatrix <- matrix(nrow = 1, ncol = 5)
+
+
+    std <- as.vector(sqrt(var_regcoef_matrix))
+
+    # The asterisks in a regression table correspond with a legend at the bottom of the table.
+    # In our case, one asterisk means “p < .1”. Two asterisks mean “p < .05”; and three asterisks mean “p < .01”.
+
+    for (i in 1:length(as.vector(coefficients))) {
+
+      tempStar = ""
+      if (.self$p_value[i] < 0.1) {
+        tempStar = "*"
+      }
+
+      if(.self$p_value[i] < 0.05){
+        tempStar = "**"
+      }
+      if(.self$p_value[i] < 0.01){
+        tempStar = "***"
+      }
+
+      tempVec = c(
+        as.vector(rownames(coefficients))[i],
+        signif(as.vector(coefficients)[i], digits = 3),
+        signif(std[i], digits = 3),
+        signif(.self$t_values[i], digits = 4),
+        signif(.self$p_value[i], digits = 3),
+        tempStar
+        )
+
+      cat("\n", tempVec, sep = " ")
+    }
+    cat("\n\n", paste("Residual standard error:", sqrt(residualvariance), "on", .self$df, "degrees of freedom!"), "\n\n", sep = "")
+
 
   }
 )
-
-linreg_mod <- linreg$new(Petal.Length ~ Species, data=iris)
-linreg_mod$print()
-linreg_mod$summary()
-
-
-data(iris)
-mod_object <- lm(Petal.Length~Species, data = iris)
-summary(mod_object)
