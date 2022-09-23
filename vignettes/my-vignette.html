@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>A linear regression package in R</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+
+
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">A linear regression package in R</h1>
+
+
+
+<div id="about-the-package" class="section level2">
+<h2>About the Package</h2>
+<p>This package has implemented a class based solution for linear
+regression. It uses a ordinary linear algebra and calculate:</p>
+<ul>
+<li>Regressions coefficients</li>
+<li>The fitted values</li>
+<li>The residuals</li>
+<li>The degrees of freedom</li>
+<li>The residual variance</li>
+<li>The variance of the regression coefficients</li>
+<li>The t-values for each coefficient</li>
+<li>The p-values for each regression coefficient</li>
+<li>The standard error of the estimate</li>
+<li>The residual standard error</li>
+</ul>
+<div id="setup-of-package" class="section level3">
+<h3>Setup of Package</h3>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lab4)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>linreg_mod <span class="ot">&lt;-</span> linreg<span class="sc">$</span><span class="fu">new</span>(Petal.Length <span class="sc">~</span> Species, <span class="at">data=</span>iris)</span></code></pre></div>
+</div>
+<div id="print-function" class="section level3">
+<h3>Print function</h3>
+<p>Function to print the formula and intercept for the linear regression
+model</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a> linreg_mod<span class="sc">$</span><span class="fu">print</span>()</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; linreg(formula = Petal.Length ~ Species, data = iris)</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  (Intercept) Speciesversicolor Speciesvirginica </span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1.462 2.798 4.09</span></span></code></pre></div>
+</div>
+<div id="resid-function" class="section level3">
+<h3>resid function</h3>
+<p>Function to compute residuals, which calculate the prediction errors
+for identified model</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(linreg_mod<span class="sc">$</span><span class="fu">resid</span>())</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] -0.062 -0.062 -0.162  0.038 -0.062  0.238</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(linreg_mod<span class="sc">$</span><span class="fu">resid</span>())</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 150</span></span></code></pre></div>
+</div>
+<div id="pred-function" class="section level3">
+<h3>pred function</h3>
+<p>Function to return the fitted value which is the predicted value of
+Y.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(linreg_mod<span class="sc">$</span><span class="fu">pred</span>())</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;    [,1]</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 1 1.462</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 2 1.462</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 3 1.462</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 4 1.462</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 5 1.462</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; 6 1.462</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(linreg_mod<span class="sc">$</span><span class="fu">pred</span>())</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] 150</span></span></code></pre></div>
+</div>
+<div id="coef-function" class="section level3">
+<h3>coef function</h3>
+<p>Function to return the coefficient as a name vector.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>linreg_mod<span class="sc">$</span><span class="fu">coef</span>()</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;       (Intercept) Speciesversicolor  Speciesvirginica </span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;             1.462             2.798             4.090</span></span></code></pre></div>
+</div>
+<div id="plot-function" class="section level3">
+<h3>plot function</h3>
+<p>Function to demonstrates plots by using ggplot2. This package
+includes 2 plots, the first one is Residuals vs Fitted Values, and the
+second plot demonstrates the root of standardized residuals vs Fitted
+Value</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>linreg_mod<span class="sc">$</span><span class="fu">plot</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [[1]]</span></span></code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<pre><code>#&gt; 
+#&gt; [[2]]</code></pre>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAABL1BMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYzMzM6AAA6ADo6AGY6OgA6OmY6ZmY6ZpA6ZrY6kLY6kNtNTU1NTW5NTY5NbqtNjshmAABmADpmAGZmOgBmOjpmOmZmZmZmkJBmkLZmkNtmtrZmtttmtv9uTU1uTW5uTY5ubo5ubqtuq+SOTU2OTW6OTY6Obk2OyP+QOgCQZgCQZjqQZmaQkGaQkLaQtpCQtraQttuQ27aQ2/+rbk2rbm6rbo6ryKur5OSr5P+2ZgC2Zjq2kDq2kGa2tpC2ttu229u22/+2/9u2///Ijk3I///bkDrbkGbbtmbbtpDb27bb29vb2//b/7bb/9vb///kq27k///r6+v/AAD/tmb/yI7/25D/27b/29v/5Kv//7b//8j//9v//+T///9dZ01aAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAO3ElEQVR4nO2dj5/bNhXAnWvvSFc6yJU15fixsdtgK9AwoGy3DhpgrLs2tIP12vSacrmc//+/AT1JtmRH9pNkS5ESvc/nkouf/Cx/LT39lrM8Satkm45A6JIAIZIAIZIAIZIAIZIAIZIAIZIAIWIDaPXPm1l27f0zhWrx81NFKOmoytzkoEWzmuyrLoScKUIUZzeFbbMPYgFoNcmoqAzP9k4VocRRtb0tA3Se7T/O87eT7HhdJ1DIoboAahMcEB7WAaDZ4AS+lmO44rNhdv1b+qAPZtlgSJLMqB6KpiVy9BnJcoMPaJS+vkn/Y6d/Q6MutMTQ3uNSAzdwzhIjQf32KMt++Lh6Zi5OKtWrz4i1D4vbl20VqKTYnJXBWczp44Tbg8NWKWgkYEHErx/Bta+RWBwJQCIUBzQr7rLIfMfS6bKWGNo/kwxLgBbwBDJAL85kl6AnlWp+iWN2+xVbHJB0vf2zMjiVxfCYxv+YHTYHlP89G9z6y39zinnwOWQjuDYFImUmEYoeXU3IEyYXp0EPINYHldMl7ahqmGUBkmXJjcBjfj6UzyyewQg+C/Vi+KMzbm3/rG6LeTZxPQDLg3NjEGq6d0oPWxXz3302ZElyMRzlxXUoGtnblKGKo//5+o/DrAgKSVicXtfKhimgxZAcZkfBXOXMvHISU1/75TfFzdZtcW9UXg9C8OBMwDuw6JHDtvWg1fOfkYd2TpOlVNjU3DELxY6y9F95juL0urZumKSCEzjKZHAinVlwkNX5FL7ffcwzaNWW4npFcCZAlJ40tcxiIlIYIB51OLocZ7f+/K/vx2pAdW3d8DRjfkEXUP4c3OHeaROg+vV4cGFtSn/AYWMwyzEvF6dFSl+O1wHJoehR5vqqCV2cXtfWDM+Yx2eh2H+FXgIk1FS++wP42SKL0bBTkbmr1+PB+ZmzwReFZRsfNKWJcfVsyL3mSvKlvHCvhqJHSWTOoBiGk8RzLE6va4WGpYEDzoG4W+Jv906FXgIk1OfZj0nZ/Y/BCXfSRdhp9oHqemXwEv8vABY9bAGIJM8yJdNUPbgpAJXFvBwKjoqateQJzkUBXNXKmv0XXJkd80w0kvQSoLxUc3PcmgjbcL0yeF6Yo9nNupinrawB82mLI7kOli+PoAivh6JHoRJ3/fMp8wuF/yCZnNYz85pWaCqA4HLZtQ9lvQxIqGnNjxTSpYfhYf89zN59sX69InghM5Y0LSuK68AMavzRSQKESAKESAKESOpRRCQBQiQBQiQBQiQBQiQBQsQc0FySyo+5M80mjCVAiCYBQjQJEKJJgBBNAoRoEiCVJsuy8kcCtCaUToEoAVqXTPpMgNYl4xpGKAFakwQIUfQFaHslkz5rB03E2aPtmoKkMtrOGF6KzcqBy/gAVe7O1lhrPWg5LmfPZeUodUSApM/OxuYKQMufShNXKj+iAJTVvlNTo6ZJgBCNH0DL8THxRK2TmkMF5N4HgUwPYDLYrH0g2eJiXTXeSjH5hwIQSUB05mB7ErK4WFeNp3qQDqDleBQtoH6NqQCtJqNzmEIbZRbrxRjWYbaAmdXT9sUdWwwodZghp6QOs3YF0t1RTNuVZpwnQCkFyZIAYafgPogvgdnRLIaXYqQetJqQuqJiLepOAELrQYBmSmrS7RUhZzEPAJD8owHQLN62WA/GsJr0lNKZ7WoKwmvSxAnl09YO6e0GJH2mYn5dUj0IUeCAitbGjjpp3RS0vJt80Lw1i+1sPUi3PyjVg+iPZkCiS/Hi10/p98vDw8OfPA0dkI9O+3IhN5U3BZUn98NPQT6GfWry5PZfWQq6evgoAkDSZ2djc816EM9il/dIFqOJ6AdE2k7YnGS1794NK7tcOaCLjx9JqcjiaXTVaJziZ2x+xvb+KPuDCicNUvohi4t11YQCiKM5r6egGAB58UFNgN689yq/+irwYt5LKcazWDlHEQDBH6kH3S4LMouLddWEUg/i28e0d0mHC6hfY2pAOuIs5gmQtSaIthibfhdzf5CHieQxp6AeSrHt7pPuXg/S6FGMeJZrDzVpDUARz3L1AijmWa59tMVQHxT1LNce2mI6szvineXqfjlUHvssVx9tMR2xuFhXTQKEaILJYrAm8xiZ/RIsIHp3bp00cT/fs5I+PkAZvzv3xfxxnMU8J9MFkFZFMV5AtW83TY0ZZDGpyzUmQD5SEO9ybecTLCAPPkhPDGPehyaUUmw1QfrrgwbkoR6EzbEPGpCXmjRWRwwbUL/G1ClotzvtU1sMNaa9C17b5iaBSpbDOzA6TQ+i79Cov0jDHJDpo+1BE149KEZA8peVMZOlCBECqn0nQDVNSkGIJvkgTOOlRzFqQF7rQW1iGvMeNEHUpNPWFDqN1do86QQImQYcFyAvW3TFC8iLk67Pk44KkJdiPt550qnTHtF4bmpECKj27QhQvJMX/KSgNHlh3uqDYh6b91KKxQ3ISz0o3skLc4/rxaKcvNC7MTUgHXEW8+0DVE3TnWMefhZbjmkBr+mkITp5I6I4nbT8QwmI9pXpAqImwwEkfVobw6a/3D2ZZrrFfMYv1kBoA00NenedKooa9SDS2DhYvKMJqBoj43vS1wRUk6brNfRSEPdBwQCSv6yMaU0DzmEi3trWFJf3Dt97VQMUmA/aSHdHscHS1Zf385d3Qk9BnbOYMaByg6XL3z2V9jmZl2aC8kF9OGnpU2/dfLF/0Cev8svfwuYd0gZLznY0shTl6+UMTehPoOIi7f7CAIHIvMPxQZsZel5LQRVAYdWkNzL0fNHig9ZiZBUNPU0wjdWGLbquvvx0vRTrP+bhA1LuQAV/ynpQ7zGPEJBSnMU8fECmQ8+B+aDQtugKrBQLb4ZZaPUg6dPO2GsiWdbW3WG0Xmxb+oNel6LXHxQtIMPGqsBSSrVDQAXIaL1YcIDkr6ZzXiu4lNL3pv9h+aA2QFUs/XV3YICCKsUUWawhtTQDwrOYEaCw6kGlk27NRe3G8Cl4Mb9fLJtXsVgY4211HkwBKOb3izE0HpaFR/l+sYKO+6HnGN8v1uBtnLTF4nu/mIUv7gIosveLETrOugbinx/E0k4CpFaUOcsjoHjWi8l+x3MKMlwvtomadM0ry6eEthxqA22x9TJLqkl76FE0BMRMWkTDWEMVyhJdbmqIT9yYUtCmhlGnvd/+oKb6TuVxyd92gOZIY9Wk097j7I7m2qCiNY9eplHRc3eHr/lBQEfjlE3MD2oH5MUHYZ2AvfogDUBa/UHFiXw2jbv5QdCS0JYeosPPrZmo9ge1rxRjIp6YSx9U8Ts6WczXNGATQM5KsbpX1gNU+XZSzJttNOnKBynKLD8+CK8oYlXEGiAXNWl1ia4FqI+atPxDAch0H8W+22KN9R09Yz5md+iIxcV0NG29X277TtSasAAhvV/BANrQuBja+xUKoI2Mi3Ub6/MLyP+4WNUtRwHI47iY/rSCUAD5HBdTFenhA/I1LuZoMLRXY0pAWiJs2FUU3Q2G9mpMBchDp73LwdDgRjXmpo1Vp4Oh7ttis3LgUGv/INPuDteDoT5a8+76g9wPhnrpD9ITOSZagFoGQzWj7g3QfN4+7GP0Itr6lk/qaLQNhmpHXQ+Qh2EfoxfRapRiyGCotsaPk+77RbRYCkIHQ/U1AQHSfxFtuw/SGQzV14SSxYxeRNsCSHMwVF8TjJM2eRFtEyCDwVBtTZTFvLImLXKW9+aTl2EfM0D1Usx0MFRfE0RTo/IiBL23IsitQ4vBUH1NGI1VUkXkLY1Za5eQwqTlYKi2ZhPG1gERmTIvxWeYie0EXh4e8q2EFIDsB0O1NcEAqoi0rdKT+00pqONgqKYmFEDV/iCxpcnVw0dqQM21wV0AJDbFIXnt8JAmImmDpV2R5g4zsa3SxcePpFTk7NFGk4K4VLdVEn7IWczDB1SdQFXdVikBWktBYlslyGxXXzUV873FPHxAtZ0XWD0IEhGpB90u85qzmIcPKPI39fZrTJmCtMRZzBMga00ogPQWHTqLefiAcuhwjfX1WX0bU6egtAue+NEDoJB2f1mLjpt6kMk2gWHtH+Rlpj1vsOpuE0hNhgNI+uxsbN5DMe93zSqq6WPYJwFCjWHDPiazO7YQED6yaja7Y75tPqgyHUMFyHB2x7aVYtWF0w2A9Gd3zLeuHtTz7A6DmHfWeALENS0zzExmd6zFyOaeNDW+spj8pQSkJbK9kHyQ9GlnDPdBhoDmIZVivRTzWClmBGgn60E7DqjfCVSBAQqvsRqYD/LU3WEEKKxSzEuHmRGgwOpBfRvrA1BgNel+jSVAiMYe0I5JSkENmgQI0dgD0hObqYwW57g/JQFCJAFCJAFCJBXziCRAiCRAiCRAiCRAiDgBdPERX/xiIG+kJWnaAku2jKSy8k1LXACCFR6wAMZE6Hz1O3i4qrw0fQ5PTJ+bE0Bv7lhFRV4ZonnCb35vdpXqyjctceWDpHVC2mKagq4e/s0wi4mVb9riCBCshDGUi49uGzJ9+ampD6qufNMSN4Au7xnzyY1T3cUnr4ydNIhZ5ndUilnEOzeNOpRIh4fmT2LzgGz4iAWgJmKagqor37TEBSD2aM1rKKY+yK4eZHiVVJNGJAFCJAFCJAFCJAFCJAFCZPOAZtngwY2T/O3jnP7Jsj5je3GjfbPr/mXjgPgqPrjztbtPgPLylhOgBoFXeRwsbjwgX7eGsPnVasLWXC/H2eBPe99OYPnjbO+UvvJjBIAoI/goQlKVzj7GVrJpQEXSKVIQfcfZbP8MFo0sx+wNBKvJiGZE4CQAFSHZ76ErQqEBOufvwqXfjAgc/98ZCyoBKkIu3tF5oZ61hAaIb/M0ovuskHuHFzXQ/+EFngMZUBEStqbTebOepQQHiC+lKQDl5/svJpDbBie1FCRtVYMvk7SX0ACd8y0caQaCj+XdBxTTGd0YQs5i8maPervN20gogOAO4W81ISjIvS/HB9RJw+aOB2zTjMWQAgL3vZoMToqQFKW74j8UQJQD/EHhzbYQgWIekhEtwomjGXxBPDKEJsX6r+6elCGZd3IVv40DCl0SIEQSIEQSIEQSIEQSIEQSIEQSIEQSIEQSIET+D2cLsJneSw8yAAAAAElFTkSuQmCC" /><!-- -->
+### summary function Function to produce result summaries of the results
+of various model fitting functions, print the coefficients with their
+standard error, t-value and p-value as well as the estimate of ˆσ and
+the degrees of freedom in the model</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>linreg_mod<span class="sc">$</span><span class="fu">summary</span>()</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; linreg(formula = Petal.Length ~ Species, data = iris)</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  (Intercept) 1.46 0.0609 24.02 9.3e-53 ***</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Speciesversicolor 2.8 0.0861 32.51 5.25e-69 ***</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  Speciesvirginica 4.09 0.0861 47.52 4.11e-91 ***</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Residual standard error: 0.430334468875131 on 147 degrees of freedom!</span></span></code></pre></div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
